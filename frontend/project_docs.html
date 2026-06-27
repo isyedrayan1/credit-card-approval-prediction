@@ -3,6 +3,7 @@
 {% block title %}Project Portal - Credit Card Approval System{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
 /* Custom styling for the premium Project Portal */
 :root {
     --sidebar-width: 280px;
@@ -383,6 +384,9 @@
 {% block extra_js %}
 <!-- Include marked.js for fast client-side markdown parsing -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Include KaTeX for dynamic math formula rendering -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const sidebarContent = document.getElementById('sidebar-content');
@@ -524,6 +528,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Parse markdown to HTML using marked.js
                 docContent.innerHTML = marked.parse(markdownText);
                 copyBtn.style.display = 'inline-flex';
+                
+                // Auto-render LaTeX formulas using KaTeX
+                renderMathInElement(docContent, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError : false
+                });
                 
                 // Update active link state in case loaded automatically
                 const activeLink = document.querySelector(`.file-link[data-path="${path}"]`);
