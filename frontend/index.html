@@ -120,6 +120,27 @@
             .bento-large-value {
                 font-size: 2rem;
             }
+            /* First card spans full row */
+            .bento-grid > .bento-card:nth-child(1) {
+                grid-column: span 2;
+                grid-row: span 1;
+            }
+            /* Second and Third cards sit side-by-side */
+            .bento-grid > .bento-card:nth-child(2),
+            .bento-grid > .bento-card:nth-child(3) {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+            /* Fourth card spans full row */
+            .bento-grid > .bento-card:nth-child(4) {
+                grid-column: span 2;
+                grid-row: span 1;
+            }
+            /* Fifth card spans full row */
+            .bento-grid > .bento-card:nth-child(5) {
+                grid-column: span 2;
+                grid-row: span 1;
+            }
         }
 
         .bento-card {
@@ -152,11 +173,6 @@
         @media (max-width: 900px) {
             .span-2 {
                 grid-column: span 2;
-            }
-        }
-        @media (max-width: 600px) {
-            .span-2 {
-                grid-column: span 1;
             }
         }
 
