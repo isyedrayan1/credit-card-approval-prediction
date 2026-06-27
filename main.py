@@ -196,14 +196,21 @@ def list_project_docs():
     """Dynamically compile a list of folders and markdown files in the project documentation directory."""
     docs_dir = REPO_ROOT / "project documentation"
     if not docs_dir.exists():
+        # Case-insensitive fallback search
+        for p in REPO_ROOT.iterdir():
+            if p.is_dir() and p.name.lower() == "project documentation":
+                docs_dir = p
+                break
+                
+    if not docs_dir.exists():
         return jsonify({"folders": []})
     
     folders_data = []
     for path in sorted(docs_dir.iterdir()):
-        if path.is_dir():
+        if path.is_dir() and not path.name.startswith('.'):
             files = []
             for file_path in sorted(path.iterdir()):
-                if file_path.suffix == '.md':
+                if file_path.suffix.lower() == '.md':
                     files.append({
                         "name": file_path.stem.replace('_', ' ').title(),
                         "relative_path": f"{path.name}/{file_path.name}"
@@ -223,6 +230,13 @@ def get_project_doc_file():
         return jsonify({"error": "Invalid file path requested"}), 400
         
     docs_dir = REPO_ROOT / "project documentation"
+    if not docs_dir.exists():
+        # Case-insensitive fallback search
+        for p in REPO_ROOT.iterdir():
+            if p.is_dir() and p.name.lower() == "project documentation":
+                docs_dir = p
+                break
+                
     target_file = (docs_dir / rel_path).resolve()
     
     # Security check: ensure path is within the designated project documentation folder
