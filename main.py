@@ -186,5 +186,58 @@ def history_data():
     except Exception as e:
          return jsonify({"error": f"Could not read history log: {str(e)}"}), 500
 
+@app.route('/portal')
+def portal():
+    """Render the project docs portal page."""
+    return render_template('project_docs.html', active_page='portal')
+
+@app.route('/api/project-docs/list', methods=['GET'])
+def list_project_docs():
+    """Dynamically compile a list of folders and markdown files in the project documentation directory."""
+    docs_dir = REPO_ROOT / "project documentation"
+    if not docs_dir.exists():
+        return jsonify({"folders": []})
+    
+    folders_data = []
+    for path in sorted(docs_dir.iterdir()):
+        if path.is_dir():
+            files = []
+            for file_path in sorted(path.iterdir()):
+                if file_path.suffix == '.md':
+                    files.append({
+                        "name": file_path.stem.replace('_', ' ').title(),
+                        "relative_path": f"{path.name}/{file_path.name}"
+                    })
+            if files:
+                folders_data.append({
+                    "name": path.name,
+                    "files": files
+                })
+    return jsonify({"folders": folders_data})
+
+@app.route('/api/project-docs/file', methods=['GET'])
+def get_project_doc_file():
+    """Read and return the raw content of a specific markdown file."""
+    rel_path = request.args.get('path', '')
+    if not rel_path or '..' in rel_path or rel_path.startswith('/') or rel_path.startswith('\\'):
+        return jsonify({"error": "Invalid file path requested"}), 400
+        
+    docs_dir = REPO_ROOT / "project documentation"
+    target_file = (docs_dir / rel_path).resolve()
+    
+    # Security check: ensure path is within the designated project documentation folder
+    if not str(target_file).startswith(str(docs_dir.resolve())):
+        return jsonify({"error": "Access denied"}), 403
+        
+    if not target_file.exists() or not target_file.is_file():
+        return jsonify({"error": "File not found"}), 404
+        
+    try:
+        with open(target_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    except Exception as e:
+        return jsonify({"error": f"Failed to read file: {str(e)}"}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)
