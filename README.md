@@ -2,6 +2,8 @@
 
 A production-ready machine learning system built with Python, Flask, pandas, and scikit-learn to automate credit card application screening and predict applicant eligibility based on demographic attributes and historical repayment behaviors.
 
+**Live Application:** [https://credit-card-approval-prediction-envs.onrender.com/](https://credit-card-approval-prediction-envs.onrender.com/)
+
 ---
 
 ## Technical Accomplishments & Work Done
