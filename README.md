@@ -89,3 +89,13 @@ To start the Flask server locally:
 python main.py
 ```
 Open your browser and navigate to `http://127.0.0.1:5000` to interact with the dashboard, run automated predictions using the **Autofill Random** feature, and view the visual chart galleries.
+
+### 3. Containerized Run (Docker)
+To build and run the application inside a lightweight container:
+```bash
+# Build the Docker image
+docker build -t credit-approval-app .
+
+# Run the container
+docker run -p 5000:5000 credit-approval-app
+```
