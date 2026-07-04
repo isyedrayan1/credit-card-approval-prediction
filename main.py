@@ -14,8 +14,23 @@ app = Flask(__name__, template_folder='frontend')
 REPO_ROOT = Path(__file__).resolve().parent
 MODEL_PATH = REPO_ROOT / "models" / "random_forest.joblib"
 PREDICTIONS_DIR = REPO_ROOT / "models" / "predictions"
+SAMPLE_DOCS_DIR = REPO_ROOT / "frontend" / "sample-docs"
 PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 SUMMARY_PATH = PREDICTIONS_DIR / "prediction_summary.json"
+
+
+def get_sample_docs_dir():
+    """Resolve the markdown source used by the project docs portal."""
+    docs_dir = SAMPLE_DOCS_DIR
+    if docs_dir.exists():
+        return docs_dir
+
+    # Case-insensitive fallback for Windows friendliness.
+    for path in REPO_ROOT.iterdir():
+        if path.is_dir() and path.name.lower() == "sample-docs":
+            return path
+
+    return docs_dir
 
 # Load the model artifact globally on startup
 if not MODEL_PATH.exists():
@@ -193,53 +208,39 @@ def portal():
 
 @app.route('/api/project-docs/list', methods=['GET'])
 def list_project_docs():
-    """Dynamically compile a list of folders and markdown files in the project documentation directory."""
-    docs_dir = REPO_ROOT / "project documentation"
-    if not docs_dir.exists():
-        # Case-insensitive fallback search
-        for p in REPO_ROOT.iterdir():
-            if p.is_dir() and p.name.lower() == "project documentation":
-                docs_dir = p
-                break
-                
+    """Dynamically compile a flat list of markdown files in the sample docs directory."""
+    docs_dir = get_sample_docs_dir()
     if not docs_dir.exists():
         return jsonify({"folders": []})
     
-    folders_data = []
-    for path in sorted(docs_dir.iterdir()):
-        if path.is_dir() and not path.name.startswith('.'):
-            files = []
-            for file_path in sorted(path.iterdir()):
-                if file_path.suffix.lower() == '.md':
-                    files.append({
-                        "name": file_path.stem.replace('_', ' ').title(),
-                        "relative_path": f"{path.name}/{file_path.name}"
-                    })
-            if files:
-                folders_data.append({
-                    "name": path.name,
-                    "files": files
-                })
-    return jsonify({"folders": folders_data})
+    files = []
+    for file_path in sorted(docs_dir.iterdir()):
+        if file_path.is_file() and file_path.suffix.lower() == '.md' and not file_path.name.startswith('.'):
+            files.append({
+                "name": file_path.stem.replace('_', ' ').title(),
+                "relative_path": file_path.name
+            })
+
+    return jsonify({
+        "folders": [
+            {
+                "name": "Sample Docs",
+                "files": files
+            }
+        ] if files else []
+    })
 
 @app.route('/api/project-docs/file', methods=['GET'])
 def get_project_doc_file():
-    """Read and return the raw content of a specific markdown file."""
+    """Read and return the raw content of a specific markdown file from sample docs."""
     rel_path = request.args.get('path', '')
     if not rel_path or '..' in rel_path or rel_path.startswith('/') or rel_path.startswith('\\'):
         return jsonify({"error": "Invalid file path requested"}), 400
         
-    docs_dir = REPO_ROOT / "project documentation"
-    if not docs_dir.exists():
-        # Case-insensitive fallback search
-        for p in REPO_ROOT.iterdir():
-            if p.is_dir() and p.name.lower() == "project documentation":
-                docs_dir = p
-                break
-                
+    docs_dir = get_sample_docs_dir()
     target_file = (docs_dir / rel_path).resolve()
     
-    # Security check: ensure path is within the designated project documentation folder
+    # Security check: ensure path is within the designated sample docs folder
     if not str(target_file).startswith(str(docs_dir.resolve())):
         return jsonify({"error": "Access denied"}), 403
         
